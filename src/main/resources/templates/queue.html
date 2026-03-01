@@ -1,0 +1,167 @@
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Queue</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="app-bg">
+<main class="container py-4 py-lg-5">
+    <div class="glass-card p-4 p-lg-5">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+            <h1 class="h3 mb-0">Clinic Queue</h1>
+            <a class="btn btn-outline-secondary" href="/dashboard">Back to Dashboard</a>
+        </div>
+
+        <div class="alert alert-danger mb-3" th:if="${param.error}" th:text="${param.error}"></div>
+        <div class="alert alert-danger mb-3" th:if="${error}" th:text="${error}"></div>
+
+        <div th:if="${session.role == 'PATIENT'}" class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Book Appointment</h2>
+                <form action="/appointments/book" method="post" class="row g-3">
+                    <div class="col-12 col-md-6">
+                        <label class="form-label">Issue</label>
+                        <input class="form-control" type="text" name="issue" placeholder="e.g. fever, skin, ortho" required>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label">Preferred Doctor (Optional)</label>
+                        <select class="form-select" name="preferredDoctorId">
+                            <option value="">Auto-assign by issue</option>
+                            <option th:each="doctor : ${doctors}"
+                                    th:value="${doctor.id}"
+                                    th:text="${doctor.name + ' - ' + doctor.specialization}">
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label">Consultation Fee (Fixed)</label>
+                        <div class="form-control bg-body-tertiary" th:text="'Rs. ' + ${#numbers.formatDecimal(fixedConsultationFee, 1, 2)}"></div>
+                    </div>
+                    <div class="col-12 col-md-6 d-flex align-items-end">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" name="emergencyRequested" value="true" id="emergencyRequested">
+                            <label class="form-check-label" for="emergencyRequested">Request emergency priority (doctor must verify)</label>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 emergency-fields d-none">
+                        <label class="form-label" for="emergencyLevel">Emergency Level</label>
+                        <select class="form-select" name="emergencyLevel" id="emergencyLevel">
+                            <option value="" selected disabled>Select level</option>
+                            <option value="LOW">Low</option>
+                            <option value="MEDIUM">Medium</option>
+                            <option value="HIGH">High</option>
+                            <option value="CRITICAL">Critical</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-8 emergency-fields d-none">
+                        <label class="form-label" for="emergencyDescription">Emergency Description</label>
+                        <textarea class="form-control" rows="2" id="emergencyDescription" name="emergencyDescription"
+                                  minlength="10"
+                                  placeholder="Describe symptoms and why emergency care is needed"></textarea>
+                    </div>
+                    <div class="col-12 emergency-fields d-none">
+                        <div class="alert alert-warning py-2 mb-0">
+                            Mark emergency only for genuine urgent cases. False emergency requests can be deprioritized.
+                        </div>
+                    </div>
+                    <div class="col-12 emergency-fields d-none">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="emergencyDeclaration" value="true" id="emergencyDeclaration">
+                            <label class="form-check-label" for="emergencyDeclaration">I confirm this emergency request is genuine.</label>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="paid" value="true" id="paid" required>
+                            <label class="form-check-label" for="paid">I confirm consultation fee payment now</label>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <button class="btn btn-primary" type="submit">Book Token</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <h3 class="h5 mb-3">Current Serving Token:
+            <span class="badge text-bg-dark" id="currentToken"
+                  th:text="${currentToken != null ? currentToken.tokenNumber : 'None'}"></span>
+        </h3>
+        <p class="text-secondary mb-3">Average waiting time: <strong th:text="${#numbers.formatDecimal(avgWaitMinutes, 1, 1)} + ' mins'"></strong></p>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                <tr>
+                    <th>Token</th>
+                    <th>Patient</th>
+                    <th>Doctor</th>
+                    <th>Issue</th>
+                    <th>Emergency</th>
+                    <th>Status</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${#lists.isEmpty(appointments)}">
+                    <td colspan="6" class="text-center text-muted">No appointments in queue.</td>
+                </tr>
+                <tr th:each="appointment : ${appointments}" th:if="${appointment.status.name() == 'WAITING'}">
+                    <td class="fw-semibold" th:text="${appointment.tokenNumber}"></td>
+                    <td th:text="${appointment.patient.name}"></td>
+                    <td th:text="${appointment.doctor != null ? appointment.doctor.name : 'Pending assignment'}"></td>
+                    <td th:text="${appointment.issue}"></td>
+                    <td>
+                        <span th:if="${appointment.emergencyVerified}" class="badge text-bg-danger">VERIFIED</span>
+                        <span th:if="${!appointment.emergencyVerified && appointment.emergencyRequested}" class="badge text-bg-warning">REQUESTED</span>
+                        <span th:if="${!appointment.emergencyVerified && appointment.emergencyRequested}" class="badge text-bg-danger ms-1">ALERT</span>
+                        <span th:if="${!appointment.emergencyVerified && !appointment.emergencyRequested}" class="badge text-bg-secondary">NO</span>
+                        <div class="small text-muted mt-1" th:if="${appointment.emergencyRequested}"
+                             th:text="${appointment.emergencyLevel + ' - ' + appointment.emergencyDescription}"></div>
+                    </td>
+                    <td th:text="${appointment.status}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<script>
+    const emergencyCheck = document.getElementById('emergencyRequested');
+    const emergencyFields = document.querySelectorAll('.emergency-fields');
+    const levelInput = document.getElementById('emergencyLevel');
+    const descriptionInput = document.getElementById('emergencyDescription');
+    const declarationInput = document.getElementById('emergencyDeclaration');
+
+    function toggleEmergencyFields() {
+        const enabled = emergencyCheck && emergencyCheck.checked;
+        emergencyFields.forEach((field) => field.classList.toggle('d-none', !enabled));
+        if (levelInput) levelInput.required = enabled;
+        if (descriptionInput) descriptionInput.required = enabled;
+        if (declarationInput) declarationInput.required = enabled;
+    }
+
+    if (emergencyCheck) {
+        emergencyCheck.addEventListener('change', toggleEmergencyFields);
+        toggleEmergencyFields();
+    }
+
+    setInterval(function() {
+        fetch('/appointments/current-token')
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.tokenNumber) {
+                    document.getElementById('currentToken').innerText = data.tokenNumber;
+                }
+            })
+            .catch(() => {});
+    }, 5000);
+</script>
+    <script th:src="@{/js/theme.js}"></script>
+</body>
+</html>
+
+

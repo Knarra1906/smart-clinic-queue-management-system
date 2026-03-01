@@ -1,0 +1,2 @@
+-- Flyway baseline marker for SmartQueue.
+-- Existing environments can baseline-on-migrate without destructive changes.
