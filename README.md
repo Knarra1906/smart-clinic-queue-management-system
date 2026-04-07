@@ -1,26 +1,99 @@
-# SmartQueue
+# Smart Clinic Queue Management System
 
-SmartQueue is a clinic queue and appointment management web application built with Spring Boot, Thymeleaf, MySQL, and Spring Security.
+## 📌 Overview
+The Smart Clinic Queue Management System is a role-based web application developed using Spring Boot and MySQL to digitize and streamline patient flow in healthcare facilities.
 
-It supports:
-1. Patient booking with queue tracking
-2. Receptionist walk-in booking (no OTP)
-3. Doctor consultation workflow (`ASSIGNED -> CONSULTING -> COMPLETED/CANCELLED`)
-4. Admin queue control and doctor assignment
+The system integrates appointment booking, emergency prioritization, doctor approval workflow, and payment validation into a structured queue management platform.
 
-## Prerequisites
+---
+
+## 🚀 Features
+
+### 👤 Patient
+- Registration & Login
+- Book Appointment
+- Request Emergency Priority
+- Online Payment (Simulation)
+- View Queue Status
+
+### 👨‍⚕️ Doctor
+- Login after Admin Approval
+- Verify Emergency Requests
+- Manage Appointment Status
+- Complete Appointments
+
+### 🛠 Admin
+- Approve New Doctor Registrations
+- View Dashboard Analytics
+- Monitor Appointments
+- Manage System Workflow
+
+---
+
+## 🏥 Core Functionalities
+
+- Role-Based Access Control (Admin, Doctor, Patient)
+- Token-Based Queue System
+- Emergency Case Verification by Doctor
+- Priority-Based Queue Handling
+- Payment Validation Before Service
+- Appointment Lifecycle Management
+  - WAITING
+  - ASSIGNED
+  - COMPLETED
+  - CANCELLED
+
+---
+
+## 🛠 Technologies Used
+
+- Java
+- Spring Boot
+- Spring Data JPA
+- Thymeleaf
+- MySQL
+- Maven
+
+---
+
+## 🧠 System Architecture
+
+The project follows layered architecture:
+
+Controller → Service → Repository → Database
+
+This ensures clean code separation and maintainability.
+
+---
+
+## 🌍 Future Enhancements
+
+- Real Payment Gateway Integration
+- SMS/Email Notifications
+- Real-Time WebSocket Queue Updates
+- Doctor Time Slot Scheduling
+
+---
+
+## 👨‍💻 Author
+
+Developed as a Mini Project for academic purposes.
+
+---
+
+## ▶️ How To Run The Website
+
+### 1) Prerequisites
 
 1. Java 24+
 2. MySQL 8+ running locally
 3. Database created: `clinic_db`
 
-## How To Run The Website
+### 2) Start MySQL
 
-### 1) Start MySQL
+Ensure MySQL service is running.
 
-Ensure MySQL is running and the `clinic_db` database exists.
-
-### 2) Start the backend server
+### 3) Start the backend server
 
 Windows:
 
@@ -34,21 +107,13 @@ macOS/Linux:
 ./mvnw spring-boot:run
 ```
 
-### 3) Open in browser
+### 4) Open in browser
 
 ```text
 http://localhost:8080/
 ```
 
-## Default Port
-
-The app runs on:
-
-```text
-server.port=${PORT:8080}
-```
-
-To run on another port (Windows):
+### Optional: run on custom port
 
 ```bash
 set PORT=9090
@@ -59,11 +124,4 @@ Then open:
 
 ```text
 http://localhost:9090/
-```
-
-## Optional: Build JAR
-
-```bash
-./mvnw clean package
-java -jar target/smartqueue-*.jar
 ```
