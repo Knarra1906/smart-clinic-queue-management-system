@@ -168,6 +168,40 @@ class AppointmentServiceTest {
         RuntimeException ex = assertThrows(RuntimeException.class, () ->
                 appointmentService.updateStatusByDoctor(120L, 31L, AppointmentStatus.CANCELLED, null, null)
         );
-        assertEquals("Doctor can cancel only ASSIGNED or CONSULTING appointments", ex.getMessage());
+        assertEquals("Doctor can cancel only ASSIGNED appointments", ex.getMessage());
+    }
+
+    @Test
+    void updateStatusByDoctor_rejectsCancelFromConsulting() {
+        Appointment appointment = new Appointment();
+        appointment.setStatus(AppointmentStatus.CONSULTING);
+        Doctor doctor = new Doctor();
+        appointment.setDoctor(doctor);
+        try {
+            java.lang.reflect.Field idField = Doctor.class.getDeclaredField("id");
+            idField.setAccessible(true);
+            idField.set(doctor, 32L);
+        } catch (Exception ignored) {
+        }
+
+        when(appointmentRepository.findById(121L)).thenReturn(Optional.of(appointment));
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () ->
+                appointmentService.updateStatusByDoctor(121L, 32L, AppointmentStatus.CANCELLED, null, null)
+        );
+        assertEquals("Doctor can cancel only ASSIGNED appointments", ex.getMessage());
+    }
+
+    @Test
+    void cancelAppointment_rejectsConsultingAppointment() {
+        Appointment appointment = new Appointment();
+        appointment.setStatus(AppointmentStatus.CONSULTING);
+
+        when(appointmentRepository.findById(130L)).thenReturn(Optional.of(appointment));
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () ->
+                appointmentService.cancelAppointment(130L)
+        );
+        assertEquals("Appointment can be cancelled only when it is WAITING or ASSIGNED", ex.getMessage());
     }
 }

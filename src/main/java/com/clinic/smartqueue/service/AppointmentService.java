@@ -289,9 +289,8 @@ public class AppointmentService {
         }
 
         if (status == AppointmentStatus.CANCELLED) {
-            if (appointment.getStatus() != AppointmentStatus.ASSIGNED &&
-                    appointment.getStatus() != AppointmentStatus.CONSULTING) {
-                throw new RuntimeException("Doctor can cancel only ASSIGNED or CONSULTING appointments");
+            if (appointment.getStatus() != AppointmentStatus.ASSIGNED) {
+                throw new RuntimeException("Doctor can cancel only ASSIGNED appointments");
             }
             appointment.setStatus(AppointmentStatus.CANCELLED);
             appointmentRepository.save(appointment);
@@ -305,11 +304,12 @@ public class AppointmentService {
 
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
-        if (appointment.getStatus() == AppointmentStatus.COMPLETED) {
-            throw new RuntimeException("Completed appointment cannot be cancelled");
-        }
         if (appointment.getStatus() == AppointmentStatus.CANCELLED) {
             throw new RuntimeException("Appointment is already cancelled");
+        }
+        if (appointment.getStatus() != AppointmentStatus.WAITING &&
+                appointment.getStatus() != AppointmentStatus.ASSIGNED) {
+            throw new RuntimeException("Appointment can be cancelled only when it is WAITING or ASSIGNED");
         }
 
         appointment.setStatus(AppointmentStatus.CANCELLED);
