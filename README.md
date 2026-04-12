@@ -44,7 +44,6 @@ The system combines appointment booking, emergency prioritization, doctor approv
 - Appointment lifecycle management
   - Main flow: `WAITING -> ASSIGNED -> CONSULTING -> COMPLETED`
   - Cancellation flow: `WAITING -> CANCELLED` or `ASSIGNED -> CANCELLED`
-
 ---
 
 ## Appointment Workflow
